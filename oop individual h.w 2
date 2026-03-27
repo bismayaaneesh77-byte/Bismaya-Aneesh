@@ -1,0 +1,114 @@
+Person Class (Base Class)
+class Person {
+    private String name;
+    private String email;
+
+    public Person(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void displayInfo() {
+        System.out.println("Name: " + name);
+        System.out.println("Email: " + email);
+    }
+}
+
+class Instructor extends Person {
+    private String department;
+
+    public Instructor(String name, String email, String department) {
+        super(name, email);
+        this.department = department;
+    }
+
+    @Override
+    public void displayInfo() {
+        super.displayInfo();
+        System.out.println("Department: " + department);
+    }
+}
+
+class Student extends Person {
+    private String studentId;
+
+    public Student(String name, String email, String studentId) {
+        super(name, email);
+        this.studentId = studentId;
+    }
+
+    public String getStudentId() {
+        return studentId;
+    }
+
+    @Override
+    public void displayInfo() {
+        super.displayInfo();
+        System.out.println("Student ID: " + studentId);
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Course {
+    private String courseName;
+    private String courseCode;
+    private Instructor instructor;
+    private List<Student> students;
+
+    public Course(String courseName, String courseCode, Instructor instructor) {
+        this.courseName = courseName;
+        this.courseCode = courseCode;
+        this.instructor = instructor;
+        this.students = new ArrayList<>();
+    }
+
+    public void enrollStudent(Student student) {
+        students.add(student);
+        System.out.println("Enrolled " + student.getName() + " in " + courseName + ".");
+    }
+
+    public void displayCourseInfo() {
+        System.out.println("\nCourse: " + courseName);
+        System.out.println("Course Code: " + courseCode);
+        System.out.println("Instructor: " + instructor.getName());
+
+        System.out.println("Enrolled Students:");
+        for (Student student : students) {
+            System.out.println(student.getName() +
+                    " (Student ID: " + student.getStudentId() + ")");
+        }
+    }
+}
+
+public class UniversityTest {
+    public static void main(String[] args) {
+
+        // 1. Create Instructor
+        Instructor instructor = new Instructor(
+                "Dr. John Smith",
+                "john.smith@university.edu",
+                "Computer Science"
+        );
+
+        // 2. Create Students
+        Student student1 = new Student(
+                "Alice Brown",
+                "alice.brown@student.edu",
+                "S101"
+        );
+
+        Student student2 = new Student(
+                "Bob Johnson",
+                "bob.johnson@student.edu",
+                "S102"
+        );
