@@ -1,0 +1,86 @@
+Product Class (Base Class)
+class Product {
+    protected String name;
+    protected double price;
+    protected int quantity;
+
+    // Constructor
+    public Product(String name, double price, int quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    // Method to get product info
+    public String getProductInfo() {
+        return "Product: " + name +
+               ", Price: $" + price +
+               ", Quantity: " + quantity;
+    }
+}
+
+Electronics Class
+class Electronics extends Product {
+    private int warranty;
+
+    // Constructor
+    public Electronics(String name, double price, int quantity, int warranty) {
+        super(name, price, quantity);
+        this.warranty = warranty;
+    }
+
+    // Method for warranty info
+    public String getWarrantyInfo() {
+        return "Warranty: " + warranty + " years";
+    }
+}
+Clothing Class
+class Clothing extends Product {
+    private String size;
+    private String material;
+
+    // Constructor
+    public Clothing(String name, double price, int quantity, String size, String material) {
+        super(name, price, quantity);
+        this.size = size;
+        this.material = material;
+    }
+
+    // Method for clothing info
+    public String getClothingInfo() {
+        return "Size: " + size + ", Material: " + material;
+    }
+}
+Main Class
+public class ShoppingApp {
+    public static void main(String[] args) {
+
+        // Create Product
+        Product genericProduct = new Product("Generic Product", 10.0, 100);
+
+        // Create Electronics
+        Electronics laptop = new Electronics("Laptop", 1500.0, 50, 2);
+
+        // Create Clothing
+        Clothing tshirt = new Clothing("T-Shirt", 25.0, 200, "M", "Cotton");
+
+        // Print Product Info
+        System.out.println(genericProduct.getProductInfo());
+        System.out.println();
+
+        System.out.println(laptop.getProductInfo());
+        System.out.println(laptop.getWarrantyInfo());
+        System.out.println();
+
+        System.out.println(tshirt.getProductInfo());
+        System.out.println(tshirt.getClothingInfo());
+    }
+}
+Sample Output
+Product: Generic Product, Price: $10.0, Quantity: 100
+
+Product: Laptop, Price: $1500.0, Quantity: 50
+Warranty: 2 years
+
+Product: T-Shirt, Price: $25.0, Quantity: 200
+Size: M, Material: Cotton
