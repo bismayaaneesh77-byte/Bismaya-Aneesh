@@ -1,0 +1,156 @@
+StockMarket Class
+import java.util.Random;
+
+class StockMarket {
+    private double stockPrice;
+    private Random random = new Random();
+
+    public StockMarket(double initialPrice) {
+        this.stockPrice = initialPrice;
+    }
+
+    public void updateMarket() {
+        double change = -5 + (10 * random.nextDouble()); // range -5 to +5
+        stockPrice += change;
+
+        // Prevent negative price
+        if (stockPrice < 1) {
+            stockPrice = 1;
+        }
+
+        System.out.println("Market Update: Stock price is now $" +
+                String.format("%.2f", stockPrice));
+    }
+
+    public double getStockPrice() {
+        return stockPrice;
+    }
+}
+
+TradingBot Class (Base Class)
+class TradingBot {
+    protected String botName;
+    protected double balance;
+    protected int stocksOwned;
+
+    public TradingBot(String botName) {
+        this.botName = botName;
+        this.balance = 1000.0;
+        this.stocksOwned = 10;
+    }
+
+    public void makeDecision(StockMarket market) {
+        System.out.println(botName + " is analyzing the market...");
+    }
+
+    public void buyStocks(int amount, StockMarket market) {
+        double price = market.getStockPrice();
+        double cost = price * amount;
+
+        if (balance >= cost) {
+            balance -= cost;
+            stocksOwned += amount;
+            System.out.println(botName + ": bought " + amount +
+                    " stocks at $" + String.format("%.2f", price) +
+                    " each. New Balance: $" + String.format("%.2f", balance));
+        } else {
+            System.out.println(botName + ": Not enough balance to buy.");
+        }
+    }
+
+    public void sellStocks(int amount, StockMarket market) {
+        double price = market.getStockPrice();
+
+        if (stocksOwned >= amount) {
+            balance += price * amount;
+            stocksOwned -= amount;
+            System.out.println(botName + ": sold " + amount +
+                    " stocks at $" + String.format("%.2f", price) +
+                    " each. New Balance: $" + String.format("%.2f", balance));
+        } else {
+            System.out.println(botName + ": Not enough stocks to sell.");
+        }
+    }
+}
+TrendFollowerBot
+class TrendFollowerBot extends TradingBot {
+    private double lastPrice;
+
+    public TrendFollowerBot(String botName) {
+        super(botName);
+        this.lastPrice = 0;
+    }
+
+    @Override
+    public void makeDecision(StockMarket market) {
+        double currentPrice = market.getStockPrice();
+
+        if (lastPrice == 0) {
+            System.out.println(botName + " is waiting for trends...");
+        } else if (currentPrice > lastPrice) {
+            System.out.println(botName + " decides to BUY stocks as price is rising.");
+            buyStocks(1, market);
+        } else if (currentPrice < lastPrice) {
+            System.out.println(botName + " decides to SELL stocks as price is falling.");
+            sellStocks(1, market);
+        } else {
+            System.out.println(botName + " decides to HOLD.");
+        }
+
+        lastPrice = currentPrice;
+    }
+}
+ShortSellingBot
+class ShortSellingBot extends TradingBot {
+    private boolean hasShorted;
+
+    public ShortSellingBot(String botName) {
+        super(botName);
+        this.hasShorted = false;
+    }
+
+    @Override
+    public void makeDecision(StockMarket market) {
+        double price = market.getStockPrice();
+
+        if (!hasShorted && price > 100) {
+            System.out.println(botName + " shorted stocks at $" +
+                    String.format("%.2f", price));
+            sellStocks(5, market);
+            hasShorted = true;
+
+        } else if (hasShorted && price < 90) {
+            System.out.println(botName + " bought back stocks at $" +
+                    String.format("%.2f", price) + " for profit.");
+            buyStocks(5, market);
+            hasShorted = false;
+
+        } else {
+            System.out.println(botName + " decides to HOLD.");
+        }
+    }
+}
+StockTradingSimulation (Main Class)
+public class StockTradingSimulation {
+    public static void main(String[] args) {
+
+        // 1. Create market
+        StockMarket market = new StockMarket(75);
+
+        // 2. Create bots
+        TradingBot bot1 = new TrendFollowerBot("Trend AI");
+        TradingBot bot2 = new ShortSellingBot("Short AI");
+
+        // 3. Simulation (5 rounds)
+        for (int i = 1; i <= 5; i++) {
+            System.out.println("\n=== Round " + i + " ===");
+
+            // Update market
+            market.updateMarket();
+
+            // Bots make decisions (Polymorphism)
+            bot1.makeDecision(market);
+            bot2.makeDecision(market);
+        }
+    }
+}
