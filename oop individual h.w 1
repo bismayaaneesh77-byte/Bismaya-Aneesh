@@ -1,0 +1,147 @@
+public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    protected void setPrice(double price) {
+        this.price = price;
+    }
+
+    public abstract double calculateTotalPrice(int quantity);
+
+    public String getDetails() {
+        return "Item: " + name + " | Price: €" + String.format("%.2f", price) +
+               " | Category: " + category;
+    }
+}
+
+class FastFood extends FoodItem {
+
+    public FastFood(String name, double price) {
+        super(name, price, "Fast Food");
+    }
+
+    @Override
+    public double calculateTotalPrice(int quantity) {
+        double total = getPrice() * quantity;
+
+        if (quantity > 10) {
+            total *= 0.75; // 25% discount
+        } else if (quantity > 5) {
+            total *= 0.85; // 15% discount
+        }
+
+        return total;
+    }
+
+    public void applyLimitedTimeOffer(double discountPercentage) {
+        double newPrice = getPrice() * (1 - discountPercentage / 100);
+        setPrice(newPrice);
+    }
+}
+
+class Beverage extends FoodItem {
+
+    public Beverage(String name, double price) {
+        super(name, price, "Beverage");
+    }
+
+    @Override
+    public double calculateTotalPrice(int quantity) {
+        double total = getPrice() * quantity;
+
+        // 5% discount for every 3 beverages
+        int setsOfThree = quantity / 3;
+        double discount = setsOfThree * 0.05 * getPrice() * 3;
+        total -= discount;
+
+        // Loyalty discount
+        if (total > 15) {
+            total -= 2;
+        }
+
+        return total;
+    }
+
+    public void adjustForSpecialIngredient(double extraCost) {
+        setPrice(getPrice() + extraCost);
+    }
+}
+
+import java.util.HashMap;
+import java.util.Map;
+
+class Order {
+    private String orderId;
+    private HashMap<FoodItem, Integer> orderedItems;
+
+    public Order(String orderId) {
+        this.orderId = orderId;
+        this.orderedItems = new HashMap<>();
+    }
+
+    public void addItem(FoodItem item, int quantity) {
+        orderedItems.put(item, orderedItems.getOrDefault(item, 0) + quantity);
+    }
+
+    public double calculateTotalOrderPrice() {
+        double total = 0;
+
+        for (Map.Entry<FoodItem, Integer> entry : orderedItems.entrySet()) {
+            FoodItem item = entry.getKey();
+            int quantity = entry.getValue();
+            total += item.calculateTotalPrice(quantity);
+        }
+
+        return total;
+    }
+
+    public void printOrderSummary() {
+        System.out.println("Order ID: " + orderId);
+        System.out.println("----- Order Summary -----");
+
+        for (Map.Entry<FoodItem, Integer> entry : orderedItems.entrySet()) {
+            FoodItem item = entry.getKey();
+            int quantity = entry.getValue();
+
+            double totalPrice = item.calculateTotalPrice(quantity);
+
+            System.out.println(item.getDetails());
+            System.out.println("Quantity: " + quantity);
+            System.out.println("Item Total: €" + String.format("%.2f", totalPrice));
+            System.out.println("-------------------------");
+        }
+
+        System.out.println("Total Order Price: €" +
+                String.format("%.2f", calculateTotalOrderPrice()));
+    }
+}
+
+public class OrderApp {
+    public static void main(String[] args) {
+
+        // 1. Instantiate items
+        FastFood burger = new FastFood("Burger", 5.00);
+        FastFood pizza = new FastFood("Pizza", 8.00);
+        Beverage cola = new Beverage("Cola", 2.50);
+        Beverage coffee = new Beverage("Coffee", 3.00);
+
+        // 2. Adjust prices
+        burger.applyLimitedTimeOffer(10); // 10% discount
+        coffee.adjustForSpecialIngredient(0.50); // extra ingredient
+
+        // 3. Create order
+        Order order = new Order("ORD123");
+
+        // 4. Add items
+        order.addItem(burger, 6);
+        order.addItem(pizza, 11);
+        order.addItem(cola, 4);
+        order.addItem(coffee, 5);
