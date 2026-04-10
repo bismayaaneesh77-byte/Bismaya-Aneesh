@@ -1,0 +1,158 @@
+import java.util.Random;
+
+//Pet (Base Class) 
+class Pet {
+    protected String petName;
+    protected int energy;
+
+    public static int totalPets = 0;
+    public static String environmentCondition = "Sunny";
+
+    public Pet(String petName) {
+        this.petName = petName;
+        this.energy = 100;
+        totalPets++;
+    }
+
+    public void eat() {
+        System.out.println(petName + " is eating!");
+    }
+
+    public void play() {
+        System.out.println(petName + " is playing!");
+    }
+
+    public void sleep() {
+        this.energy = 100;
+        System.out.println(petName + " is sleeping!");
+    }
+
+    public static void displaySimulationStats() {
+        System.out.println("Total Pets Created: " + totalPets);
+        System.out.println("Current Environment: " + environmentCondition);
+    }
+
+    public static void updateEnvironment(String newCondition) {
+        environmentCondition = newCondition;
+    }
+}
+
+//  Dog 
+class Dog extends Pet {
+
+    public Dog(String petName) {
+        super(petName);
+    }
+
+    @Override
+    public void eat() {
+        energy += 20;
+        System.out.println(petName + " wags its tail while eating!");
+    }
+
+    @Override
+    public void play() {
+        energy -= 30;
+        System.out.println(petName + " runs around happily!");
+    }
+
+    @Override
+    public void sleep() {
+        energy = 100;
+        System.out.println(petName + " is sleeping...");
+    }
+}
+
+//  Cat
+class Cat extends Pet {
+
+    public Cat(String petName) {
+        super(petName);
+    }
+
+    @Override
+    public void eat() {
+        energy += 15;
+        System.out.println(petName + " eats quietly.");
+    }
+
+    @Override
+    public void play() {
+        energy -= 10;
+        System.out.println(petName + " lazily swats at a toy.");
+    }
+
+    @Override
+    public void sleep() {
+        energy += 50;
+        System.out.println(petName + " is sleeping...");
+    }
+}
+
+// Bird 
+class Bird extends Pet {
+
+    public Bird(String petName) {
+        super(petName);
+    }
+
+    @Override
+    public void eat() {
+        energy += 10;
+        System.out.println(petName + " pecks at its food quickly.");
+    }
+
+    @Override
+    public void play() {
+        Random rand = new Random();
+        int energyLoss = rand.nextInt(21) + 10;
+        energy -= energyLoss;
+        System.out.println(petName + " soars through the sky!");
+    }
+
+    @Override
+    public void sleep() {
+        energy += 30;
+        System.out.println(petName + " is sleeping...");
+    }
+}
+
+//  SimulationManager 
+class SimulationManager {
+
+    public static void startSimulation() {
+        System.out.println("Simulation Started!");
+
+        Dog dog = new Dog("Max");
+        Cat cat = new Cat("Luna");
+        Bird bird = new Bird("Sky");
+
+        Pet.displaySimulationStats();
+        System.out.println();
+
+        dog.eat();
+        cat.eat();
+        bird.eat();
+        System.out.println();
+
+        dog.play();
+        cat.play();
+        bird.play();
+        System.out.println();
+
+        dog.sleep();
+
+        String[] conditions = {"Sunny", "Rainy", "Cloudy", "Windy"};
+        Random rand = new Random();
+        Pet.updateEnvironment(conditions[rand.nextInt(conditions.length)]);
+
+        Pet.displaySimulationStats();
+    }
+}
+
+// Main
+public class Main {
+    public static void main(String[] args) {
+        SimulationManager.startSimulation();
+    }
+}
