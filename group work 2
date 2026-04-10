@@ -1,0 +1,257 @@
+import java.util.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+enum TransactionType { WITHDRAW, DEPOSIT }
+
+abstract class Account {
+    private String accountNumber;
+    private double balance;
+
+    public Account(String accountNumber) {
+        this.accountNumber = accountNumber;
+        this.balance = 0;
+    }
+
+    public boolean deposit(double amount) {
+        if (amount <= 0) {
+            System.out.println("Can't deposit a negative value.");
+            return false;
+        }
+        balance += amount;
+        System.out.println("$" + amount + " deposited!");
+        return true;
+    }
+
+    public abstract boolean withdraw(double amount);
+
+    public String getAccountNumber() { return accountNumber; }
+    public double getBalance() { return balance; }
+    protected void setBalance(double balance) { this.balance = balance; }
+}
+
+class SavingsAccount extends Account {
+    private static final double INTEREST_RATE = 0.002;
+
+    public SavingsAccount(String accountNumber) { super(accountNumber); }
+
+    public boolean withdraw(double amount) {
+        if (getBalance() < amount) {
+            System.out.println("Not enough balance! Balance: $" + getBalance());
+            return false;
+        }
+        setBalance(getBalance() - amount);
+        setBalance(getBalance() + getBalance() * INTEREST_RATE);
+        System.out.println("$" + amount + " withdrawn! New balance: $" + getBalance() + " (Interest Applied)");
+        return true;
+    }
+}
+
+class CheckingAccount extends Account {
+    private static final double OVERDRAFT_LIMIT = 1000;
+    private static final double TRANSACTION_FEE = 5;
+
+    public CheckingAccount(String accountNumber) { super(accountNumber); }
+
+    public boolean withdraw(double amount) {
+        double totalCost = amount + TRANSACTION_FEE;
+        if (getBalance() + OVERDRAFT_LIMIT < totalCost) {
+            System.out.println("Not enough funds. Balance: $" + getBalance() + ", Max with overdraft: $" + (getBalance() + OVERDRAFT_LIMIT));
+            return false;
+        }
+        setBalance(getBalance() - totalCost);
+        System.out.println("$" + amount + " withdrawn. $" + TRANSACTION_FEE + " fee applied. New balance: $" + getBalance());
+        return true;
+    }
+}
+
+class Customer {
+    private String name;
+    private int customerId;
+    private ArrayList<Account> accounts = new ArrayList<Account>();
+
+    public Customer(String name, int customerId) {
+        this.name = name;
+        this.customerId = customerId;
+    }
+
+    public void addAccount(Account account) { accounts.add(account); }
+
+    public Account getAccount(String accountNumber) {
+        for (int i = 0; i < accounts.size(); i++) {
+            if (accounts.get(i).getAccountNumber().equals(accountNumber)) return accounts.get(i);
+        }
+        return null;
+    }
+
+    public void displayAccounts() {
+        System.out.println("Customer: " + name + " (ID: " + customerId + ")");
+        for (int i = 0; i < accounts.size(); i++) {
+            Account a = accounts.get(i);
+            String type = a instanceof SavingsAccount ? "Savings" : "Checking";
+            System.out.println("  " + a.getAccountNumber() + " (" + type + ") - $" + a.getBalance());
+        }
+    }
+
+    public int getCustomerId() { return customerId; }
+    public String getName() { return name; }
+}
+
+class Transaction {
+    private String id;
+    private TransactionType type;
+    private double amount;
+    private String date;
+    private Account account;
+    private Customer customer;
+
+    public Transaction(TransactionType type, double amount, Customer customer, Account account) {
+        this.id = UUID.randomUUID().toString();
+        this.type = type;
+        this.amount = amount;
+        this.date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.customer = customer;
+        this.account = account;
+    }
+
+    public void showTransactionInfo() {
+        System.out.println("ID: " + id + " | Type: " + type + " | Amount: $" + amount +
+                " | Account: " + account.getAccountNumber() + " | Customer: " + customer.getName() + " | Date: " + date);
+    }
+}
+
+class InputUtils {
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static String getTextInput(String message) {
+        String input = "";
+        while (input.equals("")) {
+            System.out.print(message);
+            input = scanner.nextLine().trim();
+            if (input.equals("")) System.out.println("Input cannot be empty.");
+        }
+        return input;
+    }
+
+    public static double getDoubleInput(String message) {
+        while (true) {
+            System.out.print(message);
+            if (scanner.hasNextDouble()) { double v = scanner.nextDouble(); scanner.nextLine(); return v; }
+            System.out.println("Enter a valid number."); scanner.nextLine();
+        }
+    }
+
+    public static int getNumberInputWithinRange(String message, int low, int high) {
+        while (true) {
+            System.out.print(message);
+            if (scanner.hasNextInt()) {
+                int v = scanner.nextInt(); scanner.nextLine();
+                if (v >= low && v <= high) return v;
+                System.out.println("Enter a number between " + low + " and " + high + ".");
+            } else { System.out.println("Invalid input."); scanner.nextLine(); }
+        }
+    }
+}
+
+class Bank {
+    private String bankCode;
+    private String branchCode;
+    private HashMap<Integer, Customer> customers = new HashMap<Integer, Customer>();
+    private ArrayList<Transaction> transactions = new ArrayList<Transaction>();
+    private static int customerCounter = 1000;
+    private static int accountCounter = 5000;
+
+    public Bank(String bankCode, String branchCode) {
+        this.bankCode = bankCode;
+        this.branchCode = branchCode;
+    }
+
+    public void addCustomer() {
+        String name = InputUtils.getTextInput("Enter Customer Name: ");
+        customers.put(customerCounter, new Customer(name, customerCounter));
+        System.out.println("Customer Created! ID: " + customerCounter);
+        customerCounter++;
+    }
+
+    private String generateAccountNumber() { return bankCode + "-" + branchCode + "-" + accountCounter++; }
+
+    private Customer findCustomer(int id) { return customers.get(id); }
+
+    public void createAccountForCustomer() {
+        int id = InputUtils.getNumberInputWithinRange("Enter Customer ID: ", 1000, 99999);
+        Customer customer = findCustomer(id);
+        if (customer == null) { System.out.println("Customer not found."); return; }
+        System.out.println("1. Savings  2. Checking");
+        int choice = InputUtils.getNumberInputWithinRange("Your choice: ", 1, 2);
+        String accNum = generateAccountNumber();
+        if (choice == 1) { customer.addAccount(new SavingsAccount(accNum)); }
+        else { customer.addAccount(new CheckingAccount(accNum)); }
+        System.out.println("Account Created! Number: " + accNum);
+    }
+
+    public void processDeposit() {
+        Customer customer = getCustomer();
+        if (customer == null) return;
+        Account account = getAccount(customer);
+        if (account == null) return;
+        double amount = InputUtils.getDoubleInput("Enter deposit amount: ");
+        if (account.deposit(amount)) transactions.add(new Transaction(TransactionType.DEPOSIT, amount, customer, account));
+    }
+
+    public void processWithdrawal() {
+        Customer customer = getCustomer();
+        if (customer == null) return;
+        Account account = getAccount(customer);
+        if (account == null) return;
+        double amount = InputUtils.getDoubleInput("Enter withdrawal amount: ");
+        if (account.withdraw(amount)) transactions.add(new Transaction(TransactionType.WITHDRAW, amount, customer, account));
+    }
+
+    public void showCustomerBalance() {
+        Customer customer = getCustomer();
+        if (customer == null) return;
+        Account account = getAccount(customer);
+        if (account == null) return;
+        System.out.println("Balance: $" + account.getBalance());
+    }
+
+    public void showAllTransactions() {
+        if (transactions.size() == 0) { System.out.println("No transactions yet."); return; }
+        System.out.println("------- All Transactions -------");
+        for (int i = 0; i < transactions.size(); i++) transactions.get(i).showTransactionInfo();
+    }
+
+    private Customer getCustomer() {
+        int id = InputUtils.getNumberInputWithinRange("Enter Customer ID: ", 1000, 99999);
+        Customer customer = findCustomer(id);
+        if (customer == null) { System.out.println("Customer not found."); return null; }
+        customer.displayAccounts();
+        return customer;
+    }
+
+    private Account getAccount(Customer customer) {
+        String accNum = InputUtils.getTextInput("Enter Account Number: ");
+        Account account = customer.getAccount(accNum);
+        if (account == null) { System.out.println("Account not found."); return null; }
+        return account;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Bank bank = new Bank("JVMS", "RIXS");
+        int choice = 0;
+        while (choice != 7) {
+            System.out.println("\n--- Java Bank ---");
+            System.out.println("1. Create Customer  2. Open Account  3. Deposit  4. Withdraw  5. Balance  6. Transactions  7. Exit");
+            choice = InputUtils.getNumberInputWithinRange("Your Choice: ", 1, 7);
+            if (choice == 1) bank.addCustomer();
+            else if (choice == 2) bank.createAccountForCustomer();
+            else if (choice == 3) bank.processDeposit();
+            else if (choice == 4) bank.processWithdrawal();
+            else if (choice == 5) bank.showCustomerBalance();
+            else if (choice == 6) bank.showAllTransactions();
+            else System.out.println("Goodbye!");
+        }
+    }
+}
